@@ -12,10 +12,11 @@ const cross_entropy_loss = (y_true, y_pred) => {
 //Globals
 const defaults = {
         activation_function: sigmoid,
-        activation_derivative: sigmoid,
+        activation_derivative: sigmoid_derivative,
         cost_function: cross_entropy_loss,
 }
 
+//TODO: Implement biases for the neurons. I was too lazy to have done it until now
 //Neuron class. Maybe will completely ditch classical OOP later. 
 class Neuron {
         constructor() {
@@ -29,7 +30,7 @@ exports.example_topology = [
         [new Neuron()], //Input.
         [new Neuron(), new Neuron(), new Neuron()],
         [new Neuron(), new Neuron(), new Neuron()],
-        [new Neuron()], //Output 
+        [new Neuron()], //Output.
 ]
 
 //We need to initialize input values on each neuron and randomize the weights. "Wire" the neurons together.
@@ -48,19 +49,21 @@ exports.init = (topology) => {
         return topology
 }
 
-//Topology WILL be modified by being passed in here.
 exports.feed_forward = (topology, inputs) => {
-        for (i in topology[0]) topology[0][i].value = inputs[i]
+        for (i in topology[0]) {
+                topology[0][i].value = inputs[i]
+        }
+
         for (layer in topology) {
-                if (layer == 0) continue //We won't calculate the weight of the inputs.
+                if (layer == 0) continue //Inputs have no weigths
                 for (let neuron of topology[layer]){
-                        neuron.value = defaults.activation_function(neuron.weights.reduce((total, weight_value, index) => {
-                                let behind_neuron_value = topology[layer-1][index].value
-                                total += weight_value * behind_neuron_value
+                        neuron.value = defaults.activation_function(neuron.weights.reduce((total, value, i) => {
+                                let behind_neuron_value = topology[layer-1][i].value
+                                return total + (value * behind_neuron_value)
                         }))
                 }
         }
-        return topology.slice(-1).map(n => n.value) //Returns the value of the output neurons.
+        return topology.slice(-1)[0].map(n => n.value) //Getting output neuron values.
 }
 
 //TODO:
