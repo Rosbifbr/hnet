@@ -28,6 +28,7 @@ class Neuron {
 
 //Simple example with two hidden layers.
 exports.example_topology = [
+        [new Neuron(), new Neuron(), new Neuron()], //Input.
         [new Neuron(), new Neuron(), new Neuron()],
         [new Neuron(), new Neuron(), new Neuron()],
         [new Neuron()], //Output.
@@ -50,12 +51,10 @@ exports.init = (topology) => {
 }
 
 exports.feed_forward = (topology, inputs) => {
-        //Mapping inputs as neurons for simplicity of the other. This is lazy.
-        topology.unshift(inputs.map(e => {
-                let neuron = new Neuron()
-                neuron.value = e
-                return neuron
-        }))
+        //Mapping input values to input neurons.
+        for (e in inputs){
+                topology[0][e].value = inputs[e]
+        }
 
         for (layer in topology) {
                 //Inputs have no weigths
@@ -69,10 +68,11 @@ exports.feed_forward = (topology, inputs) => {
                         }))
                 }
         }
-        return topology.slice(-1).map(n => n.value) //Getting output neuron values.
+        
+        //Getting output neuron values.
+        return topology.slice(-1)[0].map(n => n.value)
 }
 
-//TODO:
 exports.backpropagate = (topology) => {
 
 }
