@@ -1,3 +1,9 @@
+////////////////////////////////////////////////
+// Hnet - A simple neural network package.    //
+// Version: 0.1                               //
+// Author:  Rodrigo Ourique                   //
+////////////////////////////////////////////////
+
 //Application-specific functions. I'll leave some defaults here for the problems that I want to solve.
 const relu = x => x > 0 ? x : 0
 const sigmoid = x => 1 / (1 + Math.exp(-x))
@@ -20,7 +26,7 @@ const defaults = {
 //TODO: Implement biases for the neurons. I was too lazy to have done it until now 
 class Neuron {
         constructor() {
-                this.bias = 1; //0 to 1
+                this.bias = 1
                 this.weights = []
                 this.value = 0
         }
@@ -37,11 +43,12 @@ exports.example_topology = [
 //We need to initialize input values on each neuron and randomize the weights. "Wire" the neurons together.
 exports.init = (topology) => {
         for (layer in topology) {
-                //Won't map the weights of inputs As they dont have predecessors.
+                //Won't map the weights of inputs as they dont have predecessors.
                 if (layer == 0) continue
 
                 //Assigining random weights.
                 for (let neuron of topology[layer]) {
+                        neuron.bias = Math.random()
                         for (let neuron_ant of topology[layer - 1]) {
                                 neuron.weights.push(Math.random())
                         }
@@ -57,15 +64,17 @@ exports.feed_forward = (topology, inputs) => {
         }
 
         for (layer in topology) {
-                //Inputs have no weigths
+                //Inputs have no weights, so we skip them.
                 if (layer == 0) continue
                 
                 //Add behind neuron values multiplied by their weight, then apply activation function. 
                 for (let neuron of topology[layer]) {
-                        neuron.value = defaults.activation_function(neuron.weights.reduce((total, weight, i) => {
+                        let net_input = neuron.weights.reduce((total, weight, i) => {
                                 let behind_neuron_value = topology[layer - 1][i].value
                                 return total + (weight * behind_neuron_value)
-                        }))
+                        })
+
+                        neuron.value = defaults.activation_function(net_input + neuron.bias)
                 }
         }
         
@@ -73,6 +82,23 @@ exports.feed_forward = (topology, inputs) => {
         return topology.slice(-1)[0].map(n => n.value)
 }
 
-exports.backpropagate = (topology) => {
+exports.train = (topology, inputs, outputs, eons) => {
+        for (let i = 0; i < eons; i++) this.backpropagate(topology, inputs, outputs)
+}
 
+exports.backpropagate = (topology, inputs, outputs) => {
+        for (i in inputs){
+                //Feed forward.
+                this.feed_forward(topology, inputs[i])
+                let output_layer = topology.slice(-1)[0]
+
+                //Calculating error for output layer.
+                for (let neuron in output_layer) {
+                        output_layer[neuron].error = defaults.cost_function(outputs[i][neuron], output_layer[neuron].value)
+                }
+
+                
+
+                this.update_weights(topology)
+        }
 }
